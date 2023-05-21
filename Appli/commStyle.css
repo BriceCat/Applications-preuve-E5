@@ -18,7 +18,7 @@
 
 body {
     height: 100vh;
-    background-image: url('../Images/Background.jpeg');
+    background-image: url('Images/Background.jpeg');
     background-size: cover;
     background-repeat: no-repeat;
     background-position: center center;
@@ -173,7 +173,7 @@ div {
   }
   
   a:link {
-    color: #FFFFFF8F;
+    color: #ffffff;
   }
   
   a:visited {

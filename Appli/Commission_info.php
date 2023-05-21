@@ -1,3 +1,15 @@
+<?php
+session_start();
+
+// Vérifier si la variable de session "loggedin" existe et est définie à true
+if (!isset($_SESSION['loggedin']) || $_SESSION['loggedin'] !== true) {
+    header("Location: conn.php");
+    exit();
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -24,7 +36,7 @@
 
         <div class="container incontainer py-5">
         <section class="d-flex w-100 h-100 flex-column justify-content-center align-items-cente">
-            <h2 class="text-center"> Commissions Info</h1>
+            <h2 class="text-center">Commissions Info</h2>
 
             <p>Status :</p>
             <h1 class="text-center"> OPEN !</h1>
@@ -155,32 +167,32 @@
         <div class="col-xs-6">
             <form id="contact_form" action="#" method="POST" enctype="multipart/form-data">
                 <div class="form-group">
-                <label class="required" for="name">Name (Your socials ID : @,#,...)</label>
-                <input id="name" class="form-control" name="name" type="text" value="" required />
-                <span id="name_validation" class="error_message"></span>
+                    <label class="required" for="name">Name (Your socials ID: @,#,...)</label>
+                    <input id="name" class="form-control" name="name" type="text" value="" required />
+                    <span id="name_validation" class="error_message"></span>
                 </div>
                 <div class="form-group">
-                <label class="required" for="email">Email</label>
-                <input id="email" class="form-control" name="email" type="email" value="" required />
-                <span id="email_validation" class="error_message"></span>
+                    <label class="required" for="email">Email</label>
+                    <input id="email" class="form-control" name="email" type="email" value="" required />
+                    <span id="email_validation" class="error_message"></span>
                 </div>
                 <div class="form-group">
-                <label class="required" for="message">Description</label>
-                <textarea id="message" class="form-control" name="message" rows="5" cols="30" required></textarea>
-                <span id="message_validation" class="error_message"></span>
+                    <label class="required" for="message">Description</label>
+                    <textarea id="message" class="form-control" name="message" rows="5" cols="30" required></textarea>
+                    <span id="message_validation" class="error_message"></span>
                 </div>
                 <div class="form-group">
-                <label for="reference">Send a reference of your character if necessary:</label>
-                <input type="file" id="reference" name="reference" accept=".gif,.jpg,.png">
+                    <label for="reference">Send a reference of your character if necessary:</label>
+                    <input type="file" id="reference" name="reference" accept=".gif,.jpg,.png">
                 </div>
                 <div class="form-group">
-                <input class="increase" type="checkbox" id="agree" name="agree">
-                <label for="agree">I have read and i accept the Therms & Conditions above</label>
+                    <input class="increase" type="checkbox" id="agree" name="agree">
+                    <label for="agree">I have read and I accept the Terms & Conditions above</label>
                 </div>
                 <div class="form-group col-xs-5"></div>
                 <div class="form-group col-xs-6">
-                <input id="submit_button" class="btn btn-primary" type="submit" value="Submit" />
-                <div id="after_submit"></div>
+                    <input id="submit_button" class="btn btn-primary" type="submit" name="submit" value="Submit" />
+                    <div id="after_submit"></div>
                 </div>
             </form>
             <div class="col-xs-3"></div>
@@ -190,77 +202,56 @@
 
         <h3 class="text-center">And finally, you can send me the payment here on my PayPal to register your command :</h3>
 
+        <div class="row">
+            <div class="col-md-1 py-5"></div>
+                <div class="col-md-5 py-5">
+                <a href="https://paypal.me/bricecathala">
+                    <img src="Images/paypal.png" class="reseauLogo">
+                </a>
+                </div>
+                <div class="col-md-5 py-5">
+                    <h2 class="display-4 mb-5">PayPal</h2>
+                    <p class="lead">Send your payment at this adress to register</p>
+                </div>
+            </div>
+
         
-        <p class="lead text-center">- <a href="Commission_info.php">Terms and conditions</a> - <a href="">Privacy policy</a> -</p>
+        <p class="lead text-center">- <a href="keidensCave.html">Contacts</a> - <a href="mention.php">Privacy policy</a> -</p>
     </div>
-	<!-- Lien vers la bibliothèque jQuery -->
-	<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-	<!-- Lien vers le script JavaScript personnalisé -->
-	<script src="js/contact_form.js"></script>
 
-    <div id="popup"></div>
-    <script>
-        var popup = document.getElementById("popup");
-
-        if (popup.className !== "") {
-            popup.classList.add("show");
-
-            setTimeout(function() {
-            popup.classList.remove("show");
-            popup.className = "";
-            }, 5000);
-        }
-    </script>
 
     <?php
+        use PHPMailer\PHPMailer\PHPMailer;
+        use PHPMailer\PHPMailer\Exception;
+        use PHPMailer\PHPMailer\SMTP;
+
+        require './PHPMailer/src/PHPMailer.php';
+        require './PHPMailer/src/Exception.php';
+        require './PHPMailer/src/SMTP.php';
+
         if(isset($_POST['submit'])) {
             // Vérifier si l'utilisateur a coché la case "agree"
             if(!isset($_POST['agree'])) {
                 echo '<script>alert("Veuillez accepter les conditions d\'utilisation.");</script>';
                 return;
             }
-            
+
             // Récupération des données du formulaire
             $name = $_POST['name'];
             $email = $_POST['email'];
             $message = $_POST['message'];
-
-            // Vérification si un fichier a été envoyé
-            if(isset($_FILES['image']) && $_FILES['image']['error'] == 0) {
-                // Vérification de la taille du fichier
-                if($_FILES['image']['size'] <= 2097152) { // 2 Mo
-                    // Vérification du type de fichier
-                    $valid_extensions = array('jpg', 'jpeg', 'gif', 'png');
-                    $file_extension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION));
-                    if(in_array($file_extension, $valid_extensions)) {
-                        // Déplacement du fichier vers le dossier de destination
-                        $destination = 'uploads/' . $_FILES['image']['name'];
-                        move_uploaded_file($_FILES['image']['tmp_name'], $destination);
-
-                        // Ajout du chemin vers le fichier dans le message
-                        $message .= '<p><strong>Image :</strong> <a href="'.$destination.'">'.$destination.'</a></p>';
-                    } else {
-                        // Type de fichier non valide
-                        echo '<script>alert("Type de fichier non valide. Veuillez choisir un fichier jpg, jpeg, gif ou png.");</script>';
-                        return;
-                    }
-                } else {
-                    // Fichier trop volumineux
-                    echo '<script>alert("Fichier trop volumineux. La taille maximale autorisée est de 2 Mo.");</script>';
-                    return;
-                }
-            }
+            $reference = $_POST['reference'];
 
             // Créer un objet PHPMailer
-            $mail = new PHPMailer\PHPMailer\PHPMailer();
+            $mail = new PHPMailer();
             $mail->CharSet = 'UTF-8';
 
             // Configurer le serveur SMTP d'Alwaysdata
             $mail->isSMTP();
-            $mail->Host = 'ssl0.ovh.net';
+            $mail->Host = 'smtp-keiden.alwaysdata.net';
             $mail->SMTPAuth = true;
-            $mail->Username = 'votre_adresse_email@votre_domaine.com';
-            $mail->Password = 'votre_mot_de_passe';
+            $mail->Username = 'keiden@alwaysdata.net';
+            $mail->Password = '35383113';
             $mail->SMTPSecure = 'tls';
             $mail->Port = 587;
 
@@ -268,27 +259,51 @@
             $mail->setFrom($email, $name);
             $mail->addAddress('keidenart@gmail.com');
 
-            // Ajouter une pièce jointe si une image a été uploadée
-            if ($image !== null) {
-                $mail->addAttachment($image);
+            // Vérification si un fichier a été envoyé
+            if(isset($_FILES['reference']) && $_FILES['reference']['error'] == 0) {
+                // Vérification de la taille du fichier
+                if($_FILES['reference']['size'] <= 104857600) { // 100 MB
+                    // Vérification du type de fichier
+                    $valid_extensions = array('jpg', 'jpeg', 'gif', 'png');
+                    $file_extension = strtolower(pathinfo($_FILES['reference']['name'], PATHINFO_EXTENSION));
+                    if(in_array($file_extension, $valid_extensions)) {
+                        // Déplacement du fichier vers le dossier temporaire
+                        $tmp_file = $_FILES['reference']['tmp_name'];
+
+                        // Lecture du fichier en tant que chaîne de caractères
+                        $file_content = file_get_contents($tmp_file);
+
+                        // Ajout du fichier en tant que pièce jointe
+                        $mail->addStringAttachment($file_content, 'reference.' . $file_extension);
+                    } else {
+                        // Type de fichier non valide
+                        echo '<script>alert("Type de fichier non valide. Veuillez choisir un fichier jpg, jpeg, gif ou png.");</script>';
+                        return;
+                    }
+                } else {
+                    // Fichier trop volumineux
+                    echo '<script>alert("Fichier trop volumineux. La taille maximale autorisée est de 100 Mo.");</script>';
+                    return;
+                }
             }
 
             // Définir le sujet et le corps du message
             $mail->Subject = 'Nouveau message de '.$name;
             $mail->Body = '
-                <h3>Nouveau message de '.$name.'</h3>
-                <p><strong>De :</strong> '.$name.' ('.$email.')</p>
-                <p><strong>Message :</strong></p>
-                <p>'.$message.'</p>
+                Nouveau message de '.$name.'
+                De : '.$name.' ('.$email.')
+                Message :
+                '.$message.'
             ';
 
             // Envoi du message
-            if(mail($to, $subject, $message, $headers)) {
+            if($mail->send()) {
                 echo '<script>document.getElementById("popup").className = "success";</script>';
             } else {
                 echo '<script>document.getElementById("popup").className = "error";</script>';
             }
         }
     ?>
+
 </body>
 </html>
